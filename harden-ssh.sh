@@ -21,7 +21,7 @@ set -euo pipefail
 # ============================================================
 
 # --------- Defaults (can be overridden by env) ----------
-DEFAULT_PORT="${DEFAULT_PORT:-2222}"
+DEFAULT_PORT="${DEFAULT_PORT:-}"
 DEFAULT_DISABLE_PASSWORD="${DEFAULT_DISABLE_PASSWORD:-yes}"   # yes/no
 DEFAULT_ENABLE_FAIL2BAN="${DEFAULT_ENABLE_FAIL2BAN:-yes}"     # yes/no
 DEFAULT_FAIL2BAN_MAXRETRY="${DEFAULT_FAIL2BAN_MAXRETRY:-3}"
@@ -29,6 +29,7 @@ DEFAULT_FAIL2BAN_FINDTIME="${DEFAULT_FAIL2BAN_FINDTIME:-10m}"
 DEFAULT_FAIL2BAN_BANTIME="${DEFAULT_FAIL2BAN_BANTIME:-24h}"
 DEFAULT_ALLOW_USERS="${DEFAULT_ALLOW_USERS:-}"               # e.g. "ubuntu,debian,root" (comma or space separated)
 DEFAULT_INTERACTIVE="${DEFAULT_INTERACTIVE:-yes}"            # yes/no
+DEFAULT_KEEP_PORT="${DEFAULT_KEEP_PORT:-yes}"                # yes/no
 # --------------------------------------------------------
 
 SSHD_CONFIG="/etc/ssh/sshd_config"
@@ -86,6 +87,19 @@ validate_port() {
 detect_default_user() {
   # best effort: detect the login user (original user before sudo), fallback to root
   echo "${SUDO_USER:-root}"
+}
+
+detect_current_sshd_port() {
+  # parse first uncommented Port directive; fallback 22
+  if [[ -f "$SSHD_CONFIG" ]]; then
+    local port
+    port="$(grep -E '^[[:space:]]*Port[[:space:]]+[0-9]+' "$SSHD_CONFIG" | head -n1 | awk '{print $2}')"
+    if validate_port "${port:-}"; then
+      echo "$port"
+      return
+    fi
+  fi
+  echo "22"
 }
 
 get_home_of_user() {
@@ -225,7 +239,7 @@ ensure_ssh_key_for_user() {
   echo
   echo "请选择如何为用户 ${target_user} 部署 SSH 公钥："
   echo "  1) 直接粘贴公钥（一行 ssh-ed25519/ssh-rsa ...）"
-  echo "  2) 从 GitHub 用户名导入（https://github.com/<user>.keys）"
+  echo "  2) 从 GitHub 用户名导入（会抓取 https://github.com/<user>.keys，请先确保公钥已添加到 GitHub）"
   echo "  3) 跳过（将保留密码登录，不会禁用密码）"
   echo
 
@@ -252,7 +266,7 @@ ensure_ssh_key_for_user() {
         return 1
       fi
       local gh=""
-      read -r -p "请输入 GitHub 用户名: " gh || true
+      read -r -p "请输入 GitHub 用户名（与 github.com/<user> 保持一致）: " gh || true
       gh="${gh:-}"
       if [[ -z "$gh" ]]; then
         warn "GitHub 用户名为空。"
@@ -443,10 +457,20 @@ main() {
   have_cmd sshd || die "未找到 sshd（OpenSSH Server）。请先安装 openssh-server。"
 
   local interactive="$DEFAULT_INTERACTIVE"
-  [[ -t 0 ]] || interactive="no"
+  if [[ -t 0 ]]; then
+    interactive="yes"
+  elif [[ "${FORCE_INTERACTIVE:-no}" == "yes" ]]; then
+    interactive="yes"
+  else
+    interactive="no"
+  fi
 
   # config from defaults
+  local current_port; current_port="$(detect_current_sshd_port)"
   local new_port="$DEFAULT_PORT"
+  if [[ -z "$new_port" ]]; then
+    new_port="$current_port"
+  fi
   local disable_password="$DEFAULT_DISABLE_PASSWORD"
   local enable_fail2ban="$DEFAULT_ENABLE_FAIL2BAN"
   local f2b_maxretry="$DEFAULT_FAIL2BAN_MAXRETRY"
@@ -455,17 +479,27 @@ main() {
   local allow_users_raw="$DEFAULT_ALLOW_USERS"
 
   # collect inputs
+  if [[ "$interactive" == "no" && "${AUTO_PROCEED:-no}" != "yes" ]]; then
+    die "检测到非交互执行（例如 curl 管道）。请在交互终端运行，或确认配置无误后设置 AUTO_PROCEED=yes（可配合 FORCE_INTERACTIVE=yes）。"
+  fi
+
   if [[ "$interactive" == "yes" ]]; then
     echo "=== SSH 加固脚本（无 UFW）==="
     echo "提示：云 VPS 请先在安全组放行你将要设置的新端口。"
     echo
 
-    while true; do
-      prompt new_port "请输入新的 SSH 端口" "$new_port"
-      validate_port "$new_port" || { echo "端口不合法，请输入 1-65535 的数字。"; continue; }
-      ensure_port_free_or_handle "$new_port" "$interactive" || continue
-      break
-    done
+    local keep_port_answer="$DEFAULT_KEEP_PORT"
+    prompt_yesno keep_port_answer "是否保留当前 SSH 端口 ${current_port}" "$keep_port_answer"
+    if [[ "$keep_port_answer" == "no" ]]; then
+      while true; do
+        prompt new_port "请输入新的 SSH 端口" "$new_port"
+        validate_port "$new_port" || { echo "端口不合法，请输入 1-65535 的数字。"; continue; }
+        ensure_port_free_or_handle "$new_port" "$interactive" || continue
+        break
+      done
+    else
+      new_port="$current_port"
+    fi
 
     prompt_yesno disable_password "是否禁用密码登录（强烈推荐，需确保有公钥）" "$disable_password"
     prompt_yesno enable_fail2ban "是否启用 Fail2Ban（推荐）" "$enable_fail2ban"
@@ -487,6 +521,11 @@ main() {
     f2b_findtime="${FAIL2BAN_FINDTIME:-$f2b_findtime}"
     f2b_bantime="${FAIL2BAN_BANTIME:-$f2b_bantime}"
     allow_users_raw="${ALLOW_USERS:-$allow_users_raw}"
+
+    local keep_port="${KEEP_PORT:-$DEFAULT_KEEP_PORT}"
+    if [[ "$keep_port" == "yes" && -z "${NEW_PORT:-}" ]]; then
+      new_port="$current_port"
+    fi
 
     validate_port "$new_port" || die "端口不合法：$new_port"
     ensure_port_free_or_handle "$new_port" "$interactive"
@@ -512,12 +551,23 @@ main() {
   print_plan_summary "$login_user" "$new_port" "$disable_password" "$allow_users" \
     "$enable_fail2ban" "$f2b_maxretry" "$f2b_findtime" "$f2b_bantime"
 
+  if [[ "$interactive" == "yes" ]]; then
+    local proceed="yes"
+    prompt_yesno proceed "确认应用上述修改并继续吗" "yes"
+    [[ "$proceed" == "yes" ]] || die "已取消执行。"
+  else
+    if [[ "${AUTO_PROCEED:-no}" != "yes" ]]; then
+      die "检测到非交互执行。为安全起见，需设置 AUTO_PROCEED=yes 才会继续。"
+    fi
+  fi
+
   # snapshot for diff preview
   local before_copy="${TMP_DIR}/sshd_config.before.${TS}"
   cp -a "$SSHD_CONFIG" "$before_copy"
 
   # backup for rollback
   backup_file "$SSHD_CONFIG"
+  local backup_path="${SSHD_CONFIG}.bak.${TS}"
 
   # apply sshd config
   set_sshd_kv "Port" "$new_port"
@@ -572,6 +622,11 @@ main() {
   if [[ "$enable_fail2ban" == "yes" ]]; then
     fail2ban_install
     fail2ban_write_jail_local "$new_port" "$f2b_maxretry" "$f2b_findtime" "$f2b_bantime"
+    if systemctl is-active --quiet fail2ban; then
+      log "fail2ban 服务运行中：$(systemctl status fail2ban --no-pager | head -n 3 | tr '\\n' ' ')"
+    else
+      warn "fail2ban 未成功运行，请执行：systemctl status fail2ban 查看日志。"
+    fi
   else
     log "已跳过 Fail2Ban"
   fi
@@ -590,6 +645,21 @@ main() {
   echo "  sudo fail2ban-client status sshd"
   echo
   echo "云服务器：确认安全组已放行 TCP ${new_port}（建议仅允许你的固定 IP）。"
+
+  if [[ "$interactive" == "yes" ]]; then
+    echo
+    local rollback="no"
+    prompt_yesno rollback "是否立即撤回本次修改并恢复到备份（${backup_path}）" "no"
+    if [[ "$rollback" == "yes" ]]; then
+      cp -a "$backup_path" "$SSHD_CONFIG"
+      service_restart_sshd
+      if [[ "$enable_fail2ban" == "yes" ]]; then
+        systemctl stop fail2ban || true
+      fi
+      log "已恢复 sshd 配置备份并重启 SSH。若启用了 Fail2Ban 已尝试停止。"
+      exit 0
+    fi
+  fi
 }
 
 main "$@"
