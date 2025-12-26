@@ -95,8 +95,10 @@ bash
 - `FAIL2BAN_FINDTIME`：时间窗口（默认 10m）
 - `FAIL2BAN_BANTIME`：封禁时长（默认 24h）
 - `ALLOW_USERS`：AllowUsers 列表（逗号或空格分隔；留空不限制）
+- `KEEP_PORT`：是否保留当前 SSH 端口（yes/no，默认 yes，如设为 no 请设置 NEW_PORT）
 - `PUBKEY`：直接传入公钥
 - `GITHUB_KEYS_USER`：从 GitHub 导入公钥
+- `AUTO_PROCEED`：非交互模式下是否自动执行（yes/no，默认 no；设置 yes 才会继续）
 
 说明：若未提供 `PUBKEY` 或 `GITHUB_KEYS_USER`，脚本会为避免锁死 **自动保留密码登录**。
 
