@@ -29,6 +29,7 @@ DEFAULT_FAIL2BAN_FINDTIME="${DEFAULT_FAIL2BAN_FINDTIME:-10m}"
 DEFAULT_FAIL2BAN_BANTIME="${DEFAULT_FAIL2BAN_BANTIME:-24h}"
 DEFAULT_ALLOW_USERS="${DEFAULT_ALLOW_USERS:-}"               # e.g. "ubuntu,debian,root" (comma or space separated)
 DEFAULT_INTERACTIVE="${DEFAULT_INTERACTIVE:-yes}"            # yes/no
+DEFAULT_KEEP_PORT="${DEFAULT_KEEP_PORT:-yes}"                # yes/no
 # --------------------------------------------------------
 
 SSHD_CONFIG="/etc/ssh/sshd_config"
