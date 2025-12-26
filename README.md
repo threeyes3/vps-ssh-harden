@@ -40,19 +40,11 @@ GITHUB_KEYS_USER=threeyes3 \
 bash
 ```
 
-### 本地密钥助手（生成 SSH 公钥）
+### SSH 密钥简要说明
 
-- 作用：在 **本地电脑** 一键生成 ed25519 密钥对，并显示/保存公钥，供脚本粘贴使用。
-- macOS/Linux：先下载仓库或脚本，然后运行  
-  ```bash
-  bash tools/local-key-helper.sh
-  ```  
-  若仅下载脚本：  
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/tools/local-key-helper.sh -o local-key-helper.sh
-  bash local-key-helper.sh
-  ```
-- Windows：下载仓库或脚本后，右键使用 PowerShell 运行 `tools/local-key-helper.ps1`（如需放行脚本，可在 PowerShell 中先执行：`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`）。
+- 脚本只在 VPS 上运行，不会帮你在服务器生成密钥；请在 **本地电脑** 先准备好公钥。
+- 推荐使用 ed25519 密钥（如 `ssh-keygen -t ed25519 -C "label"`）。详细步骤与本地密钥助手用法，见使用手册 1.3 节：  
+  👉 [密钥生成与助手说明](docs/zh/GUIDE.md#13-%E5%85%B3%E4%BA%8E-ssh-%E5%AF%86%E9%92%A5%E7%94%9F%E6%88%90%E5%9C%A8%E4%BD%A0%E7%9A%84%E7%94%B5%E8%84%91%E4%B8%8A%E5%AE%8C%E6%88%90)
 
 ---
 

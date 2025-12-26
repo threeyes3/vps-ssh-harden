@@ -65,18 +65,9 @@ $keyBase = Read-Host (Msg $lang "filename_prompt")
 if ([string]::IsNullOrWhiteSpace($keyBase)) { $keyBase = "id_ed25519_vps" }
 
 $keyPath = Join-Path $sshDir $keyBase
-while (Test-Path $keyPath) {
-    $ans = Read-Host (Msg $lang "exists_prompt")
-    if ($ans -eq "y" -or $ans -eq "Y") {
-        $keyBase = Read-Host (Msg $lang "filename_prompt")
-        if ([string]::IsNullOrWhiteSpace($keyBase)) { $keyBase = "id_ed25519_vps" }
-        $keyPath = Join-Path $sshDir $keyBase
-    }
-    else {
-        $suffix = Get-Date -Format "yyyyMMddHHmmss"
-        $keyPath = "${keyPath}_${suffix}"
-        break
-    }
+if (Test-Path $keyPath) {
+    $suffix = Get-Date -Format "yyyyMMddHHmmss"
+    $keyPath = "${keyPath}_${suffix}"
 }
 
 Write-Host ""

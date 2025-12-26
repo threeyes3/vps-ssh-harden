@@ -92,21 +92,10 @@ main() {
   key_base="${key_base:-id_ed25519_vps}"
 
   local key_path="$ssh_dir/$key_base"
-  while [[ -f "$key_path" ]]; do
-    read -r -p "$(msg exists_prompt)" ans || true
-    case "${ans:-N}" in
-      y|Y)
-        read -r -p "$(msg filename_prompt) " key_base || true
-        key_base="${key_base:-id_ed25519_vps}"
-        key_path="$ssh_dir/$key_base"
-        ;;
-      *)
-        # append timestamp to avoid overwrite
-        key_path="${key_path}_$(date +%Y%m%d%H%M%S)"
-        break
-        ;;
-    esac
-  done
+  if [[ -f "$key_path" ]]; then
+    # avoid overwriting existing keys silently; place new key with timestamp suffix
+    key_path="${key_path}_$(date +%Y%m%d%H%M%S)"
+  fi
 
   echo
   echo "$(msg gen_start)"

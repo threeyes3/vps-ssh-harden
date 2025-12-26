@@ -29,25 +29,21 @@
 
 ### 1.3 关于 SSH 密钥生成（在你的电脑上完成）
 
-脚本不会在服务器上生成密钥，私钥必须保存在 **你的本地电脑**。加固脚本只运行在 VPS 上；密钥助手则是你在本地电脑单独打开的小工具，专门用来“生成一对新密钥并展示公钥”，不需要先检查你本地是否已有密钥。本指南为中英双语，建议密钥助手在启动时提供“选择语言（中文/English）”的提示，后续步骤用所选语言呈现。为零基础用户，建议在 Windows 或 macOS 上按下面的“本地密钥助手”思路操作：
+核心原则：**密钥只在本地电脑生成和保存，VPS 上不生成、不存私钥。**
 
-**工具设计（双击即用，专注一键生成）**
-- 形态：一个可执行文件或桌面快捷方式，双击就运行；启动后先让用户选择语言（中文/English），全程提示无需敲命令。
-- 目标：直接生成新的 ed25519 密钥对（不做“是否已有”的复杂检查），内部调用 `ssh-keygen -t ed25519 -C "your_label_here"`，提示“按回车接受默认路径”“设置密钥口令（建议）”。这里的 `-C` 注释字段只是给密钥打标签（常见是邮箱），不影响功能，用户可以输入邮箱或任何用于识别的文字。
-- 完成后自动：
-  - 确认私钥权限（macOS/Linux: `chmod 600`；Windows 不需要处理权限）。
-  - 把公钥内容显示在窗口/终端，并额外保存到易找的文件（macOS: `~/Desktop/ssh_public_key.txt`，Windows: `C:\\Users\\<你>\\Desktop\\ssh_public_key.txt`），方便复制。
-  - 可选：把公钥整理到一个清单文件（macOS: `~/.ssh/vps_keys/public_keys.txt`，Windows: `C:\\Users\\<你>\\.ssh\\vps_keys\\public_keys.txt`），便于备份。
+#### 自己生成（推荐）
+1. macOS/Linux 打开终端，或 Windows 打开 PowerShell。  
+2. 运行：`ssh-keygen -t ed25519 -C "你的备注或邮箱"`，回车接受默认路径，按需设置口令。  
+3. 公钥位置：`~/.ssh/id_ed25519.pub`（Windows: `C:\\Users\\你\\.ssh\\id_ed25519.pub`），复制整行备用。
 
-**零基础快速步骤（无需懂命令）**
-1) 在你的电脑上 **双击打开“本地密钥助手”**（无需输入命令），本仓库已提供：  
-   - macOS/Linux：`tools/local-key-helper.sh`  
-   - Windows：`tools/local-key-helper.ps1`  
-2) 进入工具后，先选择语言（中文/English），再按提示一路回车即可生成新的密钥对，并看到“公钥”内容；桌面会生成 `ssh_public_key.txt` 方便复制。  
-3) 复制整行公钥。  
-4) 登录 VPS 运行本项目脚本时，按提示粘贴这行公钥（或先把公钥添加到你的 GitHub 账号，再用 GitHub 导入方式）。
+#### 如需可视/免命令方式
+- 你可以使用任意可信的本地工具生成公钥，也可以使用在线生成器（请自查可信度，我们不做推荐；注意不要泄露私钥）。
 
-这样即使从零基础开始，也能在本地安全生成并保存密钥，再安全地在 VPS 上应用加固脚本。
+#### 本仓库提供的双语“本地密钥助手”
+- 位置：`tools/local-key-helper.sh`（macOS/Linux），`tools/local-key-helper.ps1`（Windows）。
+- 用法：双击或在终端运行后，选择语言（中文/English），按提示一键生成 ed25519 密钥对并显示公钥，桌面会保存 `ssh_public_key.txt` 便于复制。
+
+完成后，在运行加固脚本时粘贴你的公钥（或先把公钥添加到 GitHub，再用 GitHub 导入方式）。
 
 ---
 
@@ -91,8 +87,18 @@ GITHUB_KEYS_USER=threeyes3 \
 bash
 ```
 
-如果你不提供 `PUBKEY` 或 `GITHUB_KEYS_USER`，
-脚本将为了安全 **自动保留密码登录**，以避免锁死。
+可选参数（环境变量）速览：
+- `NEW_PORT`：新的 SSH 端口（默认 2222）
+- `DISABLE_PASSWORD`：是否禁用密码登录（yes/no，默认 yes，若无密钥会自动保留密码）
+- `ENABLE_FAIL2BAN`：是否启用 Fail2Ban（yes/no，默认 yes）
+- `FAIL2BAN_MAXRETRY`：最大尝试次数（默认 3）
+- `FAIL2BAN_FINDTIME`：时间窗口（默认 10m）
+- `FAIL2BAN_BANTIME`：封禁时长（默认 24h）
+- `ALLOW_USERS`：AllowUsers 列表（逗号或空格分隔；留空不限制）
+- `PUBKEY`：直接传入公钥
+- `GITHUB_KEYS_USER`：从 GitHub 导入公钥
+
+说明：若未提供 `PUBKEY` 或 `GITHUB_KEYS_USER`，脚本会为避免锁死 **自动保留密码登录**。
 
 ---
 
@@ -147,10 +153,4 @@ fail2ban-client set sshd unbanip <IP>
 
 ---
 
-## 7. 参数参考（速查）
-
-- `NEW_PORT`：新的 SSH 端口
-- `DISABLE_PASSWORD`：是否禁用密码登录
-- `ENABLE_FAIL2BAN`：是否启用 Fail2Ban
-- `PUBKEY`：直接传入 SSH 公钥
-- `GITHUB_KEYS_USER`：从 GitHub 导入公钥
+---

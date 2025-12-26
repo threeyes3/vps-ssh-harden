@@ -26,19 +26,11 @@ Interactive mode is recommended for first-time use; fast mode is available once 
 curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/harden-ssh.sh | sudo bash
 ```
 
-### Local key helper (generate SSH public key)
+### SSH key quick note
 
-- Purpose: run **locally** to one-click generate an ed25519 keypair, show/save the public key, and paste it into the script.
-- macOS/Linux: download the repo or script, then run  
-  ```bash
-  bash tools/local-key-helper.sh
-  ```  
-  If you only download the script:  
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/tools/local-key-helper.sh -o local-key-helper.sh
-  bash local-key-helper.sh
-  ```
-- Windows: download the repo or script, then run `tools/local-key-helper.ps1` in PowerShell (if needed, allow scripts first: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`).
+- The script runs on the VPS only; generate your key **locally** first.
+- We recommend ed25519 (e.g., `ssh-keygen -t ed25519 -C "label"`). For detailed steps and the local key helper, see User Guide §1.3:  
+  👉 [Key generation & helper](docs/en/GUIDE.md#13-ssh-key-generation-on-your-pc)
 
 ---
 ### 📘 User Guide (Recommended)
