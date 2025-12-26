@@ -27,7 +27,15 @@ curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/harde
 ```
 
 ---
+### 📘 User Guide (Recommended)
 
-### Documentation
+👉 **[Read the full user guide](docs/en/GUIDE.md)**
 
-- `docs/en/GUIDE.md`
+> This guide covers:  
+> - Recommended workflow for new VPS instances  
+> - Correct usage of fast (non-interactive) mode  
+> - Security design decisions and trade-offs  
+> - Recovery and rollback in case of SSH lockout  
+
+**If you only read one document, read this one.**
+
