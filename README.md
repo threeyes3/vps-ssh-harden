@@ -53,6 +53,3 @@ bash
 > - SSH 锁死后的回滚与救援  
 
 **如果你只阅读一份文档，请阅读这里。**
-
-
-MIT License · Use at your own risk.
