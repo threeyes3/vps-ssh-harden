@@ -4,32 +4,30 @@
 
 > ⚠️ AI-generated Notice  
 > This script is generated and iteratively refined with the assistance of AI (ChatGPT).
-> Review the code before production use.
+> Review and understand the code before production use.
 
-A cloud-friendly SSH hardening script for Linux VPS.  
-Designed to work even on fresh servers without SSH keys.
+---
+
+### What / When / How
+
+A cloud-friendly SSH hardening script for Linux VPS, designed to safely apply common SSH security practices
+(port change, key-only login, Fail2Ban) without relying on UFW.
+
+Use it when provisioning new VPS instances or automating SSH hardening across servers,
+especially when you want to avoid accidental lockouts.
+
+Interactive mode is recommended for first-time use; fast mode is available once you understand the behavior.
 
 ---
 
 ### Quick Start
 
-**Interactive (recommended)**
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/harden-ssh.sh | sudo bash
-```
-
-**Fast mode**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/harden-ssh.sh | sudo \
-NEW_PORT=40022 GITHUB_KEYS_USER=threeyes3 bash
 ```
 
 ---
 
 ### Documentation
 
-- `docs/en/USAGE.md`
-- `docs/en/SECURITY.md`
-- `docs/en/RECOVERY.md`
+- `docs/en/GUIDE.md`
