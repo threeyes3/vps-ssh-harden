@@ -26,6 +26,12 @@ Interactive mode is recommended for first-time use; fast mode is available once 
 curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/harden-ssh.sh | sudo bash
 ```
 
+### SSH key quick note
+
+- The script runs on the VPS only; generate your key **locally** first.
+- We recommend ed25519 (e.g., `ssh-keygen -t ed25519 -C "label"`). For detailed steps and the local key helper, see User Guide §1.3:  
+  👉 [Key generation & helper](docs/en/GUIDE.md#13-ssh-key-generation-on-your-pc)
+
 ---
 ### 📘 User Guide (Recommended)
 
@@ -38,4 +44,3 @@ curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/harde
 > - Recovery and rollback in case of SSH lockout  
 
 **If you only read one document, read this one.**
-
