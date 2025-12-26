@@ -28,7 +28,8 @@
 **交互式（推荐）**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/harden-ssh.sh | sudo bash
+curl -fsSLO https://raw.githubusercontent.com/threeyes3/vps-ssh-harden/main/harden-ssh.sh
+sudo bash harden-ssh.sh
 ```
 
 **快速运行（非交互）**
@@ -39,6 +40,12 @@ NEW_PORT=40022 DISABLE_PASSWORD=yes \
 GITHUB_KEYS_USER=threeyes3 \
 bash
 ```
+
+### SSH 密钥简要说明
+
+- 脚本只在 VPS 上运行，不会帮你在服务器生成密钥；请在 **本地电脑** 先准备好公钥。
+- 推荐使用 ed25519 密钥（如 `ssh-keygen -t ed25519 -C "label"`）。详细步骤与本地密钥助手用法，见使用手册 1.3 节：  
+  👉 [密钥生成与助手说明](docs/zh/GUIDE.md#13-%E5%85%B3%E4%BA%8E-ssh-%E5%AF%86%E9%92%A5%E7%94%9F%E6%88%90%E5%9C%A8%E4%BD%A0%E7%9A%84%E7%94%B5%E8%84%91%E4%B8%8A%E5%AE%8C%E6%88%90)
 
 ---
 
