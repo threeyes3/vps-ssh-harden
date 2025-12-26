@@ -663,3 +663,4 @@ main() {
 }
 
 main "$@"
+DEFAULT_KEEP_PORT="${DEFAULT_KEEP_PORT:-yes}"                # yes/no
